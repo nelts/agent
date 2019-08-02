@@ -11,6 +11,11 @@ import { ScheduleDecoratorType } from './decorators/schedule';
 import { runFunctionalWithPromise } from '@nelts/utils';
 import AgentBootstrapCompiler from './compilers/bootstrap';
 
+import Ipc from './decorators/ipc';
+import Auto from './decorators/auto';
+import Namespace from './decorators/namespace';
+import Schedule from './decorators/schedule';
+
 type AgentComponentConstructorType = { new(app: AgentFactory): AgentComponentImplements };
 type IPC_POOL = {
   [name: string]: boolean;
@@ -102,6 +107,10 @@ export default class AgentFactory extends Factory<AgentPlugin> implements Widget
 }
 
 export {
+  Ipc,
+  Auto,
+  Namespace,
+  Schedule,
   AgentPlugin,
   AgentComponent,
   AgentComponentImplements,

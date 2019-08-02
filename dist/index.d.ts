@@ -4,6 +4,10 @@ import { Factory, InCommingMessage } from '@nelts/factory';
 import { Agent as AgentMessager, MessageReceiveDataOptions } from '@nelts/messager';
 import AgentPlugin from './plugin';
 import AgentComponent, { AgentComponentImplements } from './components/base';
+import Ipc from './decorators/ipc';
+import Auto from './decorators/auto';
+import Namespace from './decorators/namespace';
+import Schedule from './decorators/schedule';
 export default class AgentFactory extends Factory<AgentPlugin> implements WidgetComponent {
     private _name;
     private _agentComponentConstructor;
@@ -20,4 +24,4 @@ export default class AgentFactory extends Factory<AgentPlugin> implements Widget
     componentReceiveMessage(message: MessageReceiveDataOptions, socket?: any): void;
     private resolveWithAgentDecorators;
 }
-export { AgentPlugin, AgentComponent, AgentComponentImplements, };
+export { Ipc, Auto, Namespace, Schedule, AgentPlugin, AgentComponent, AgentComponentImplements, };

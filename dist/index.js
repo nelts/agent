@@ -13,6 +13,14 @@ exports.AgentComponentImplements = base_1.AgentComponentImplements;
 const namespace_1 = require("./decorators/namespace");
 const utils_2 = require("@nelts/utils");
 const bootstrap_1 = require("./compilers/bootstrap");
+const ipc_1 = require("./decorators/ipc");
+exports.Ipc = ipc_1.default;
+const auto_1 = require("./decorators/auto");
+exports.Auto = auto_1.default;
+const namespace_2 = require("./decorators/namespace");
+exports.Namespace = namespace_2.default;
+const schedule_1 = require("./decorators/schedule");
+exports.Schedule = schedule_1.default;
 class AgentFactory extends factory_1.Factory {
     constructor(processer, args) {
         super(processer, args, plugin_1.default);
