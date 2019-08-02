@@ -1,6 +1,6 @@
 {
   "name": "@nelts/agent",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "agent for nelts",
   "main": "dist/index.js",
   "source": "dist",
