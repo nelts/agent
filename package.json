@@ -1,0 +1,38 @@
+{
+  "name": "@nelts/agent",
+  "version": "1.0.1",
+  "description": "agent for nelts",
+  "main": "dist/index.js",
+  "source": "dist",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nelts/agent.git"
+  },
+  "scripts": {
+    "build": "rm -rf dist/ && tsc -d"
+  },
+  "keywords": [
+    "template",
+    "nelts"
+  ],
+  "author": "cevio",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nelts/agent/issues"
+  },
+  "homepage": "https://github.com/nelts/agent#readme",
+  "devDependencies": {
+    "@types/node": "^12.6.8",
+    "typescript": "^3.5.3"
+  },
+  "dependencies": {
+    "@nelts/factory": "^1.0.0",
+    "@nelts/messager": "^1.0.7",
+    "@nelts/utils": "^1.0.5",
+    "@types/cron": "^1.7.1",
+    "cron": "^1.7.1",
+    "globby": "^10.0.1",
+    "moment": "^2.24.0",
+    "reflect-metadata": "^0.1.13"
+  }
+}
