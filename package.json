@@ -26,9 +26,9 @@
     "typescript": "^3.5.3"
   },
   "dependencies": {
-    "@nelts/factory": "^1.0.0",
-    "@nelts/messager": "^1.0.7",
-    "@nelts/utils": "^1.0.5",
+    "@nelts/factory": "^1.0.9",
+    "@nelts/messager": "^1.0.13",
+    "@nelts/utils": "^1.0.14",
     "@types/cron": "^1.7.1",
     "cron": "^1.7.1",
     "globby": "^10.0.1",
