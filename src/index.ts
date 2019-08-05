@@ -69,6 +69,7 @@ export default class AgentFactory extends Factory<AgentPlugin> implements Widget
     if (!target) return false;
     if (target.status) return true;
     target.job.start();
+    this._jobs[property].status = true;
     return true;
   }
 
@@ -77,6 +78,7 @@ export default class AgentFactory extends Factory<AgentPlugin> implements Widget
     if (!target) return false;
     if (!target.status) return true;
     target.job.stop();
+    this._jobs[property].status = false;
     return true;
   }
 

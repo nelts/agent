@@ -66,6 +66,7 @@ class AgentFactory extends factory_1.Factory {
         if (target.status)
             return true;
         target.job.start();
+        this._jobs[property].status = true;
         return true;
     }
     stopHybridJob(property) {
@@ -75,6 +76,7 @@ class AgentFactory extends factory_1.Factory {
         if (!target.status)
             return true;
         target.job.stop();
+        this._jobs[property].status = false;
         return true;
     }
     async convertHealth(post, socket) {
