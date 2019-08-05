@@ -6,5 +6,7 @@ var DecoratorNameSpace;
     DecoratorNameSpace["FEEDBACK"] = "FEEDBACK";
     DecoratorNameSpace["AUTO"] = "AUTO";
     DecoratorNameSpace["SCHEDULE"] = "SCHEDULE";
+    DecoratorNameSpace["SCHEDULE_AUTO"] = "SCHEDULE.AUTO";
+    DecoratorNameSpace["SCHEDULE_RUN"] = "SCHEDULE.RUN";
 })(DecoratorNameSpace || (DecoratorNameSpace = {}));
 exports.default = DecoratorNameSpace;

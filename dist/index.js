@@ -25,6 +25,7 @@ class AgentFactory extends factory_1.Factory {
     constructor(processer, args) {
         super(processer, args, plugin_1.default);
         this._ipc_pool = {};
+        this._jobs = {};
         const target = utils_1.RequireDefault(args.file);
         this._name = args.name;
         this._agentComponentConstructor = target;
@@ -40,7 +41,11 @@ class AgentFactory extends factory_1.Factory {
         });
         this.on('hybrid', async (message, post, socket) => {
             const method = message.method;
-            if (this._ipc_pool[method] !== undefined && typeof this._target[method] === 'function') {
+            if (method === 'event:put:job') {
+                this.hybridJob(message.data);
+                post(true, true);
+            }
+            else if (this._ipc_pool[method] !== undefined && typeof this._target[method] === 'function') {
                 const value = await this._target[method](message.data, socket);
                 post(value, this._ipc_pool[method]);
             }
@@ -48,6 +53,21 @@ class AgentFactory extends factory_1.Factory {
     }
     get messager() {
         return this._messager;
+    }
+    hybridJob(data) {
+        const target = this._agentComponentConstructor.prototype[data.property];
+        if (target) {
+            const schedule = Reflect.getMetadata(namespace_1.default.SCHEDULE, target);
+            const schedule_auto = Reflect.getMetadata(namespace_1.default.SCHEDULE_AUTO, target);
+            const schedule_run = Reflect.getMetadata(namespace_1.default.SCHEDULE_RUN, target);
+            if (schedule) {
+                this.createNewJob(data.property, {
+                    cron: schedule,
+                    auto: data.auto || !!schedule_auto,
+                    run: data.run || !!schedule_run,
+                });
+            }
+        }
     }
     async convertHealth(post, socket) {
         const result = {
@@ -96,22 +116,28 @@ class AgentFactory extends factory_1.Factory {
             const target = this._agentComponentConstructor.prototype[property];
             if (property === 'constructor')
                 continue;
-            const schedule = Reflect.getMetadata(namespace_1.default.SCHEDULE, target);
+            this.hybridJob({ property: property });
             const isIPC = Reflect.getMetadata(namespace_1.default.IPC, target);
             const isIPCFeedBack = Reflect.getMetadata(namespace_1.default.FEEDBACK, target);
             if (isIPC)
                 this._ipc_pool[property] = !!isIPCFeedBack;
-            if (schedule) {
-                const job = new cron_1.CronJob(schedule.cron, () => {
-                    if (this._target[property]) {
-                        utils_2.runFunctionalWithPromise(this._target[property](schedule.runOnInit ? null : job)).then(result => {
-                            if (result === true && !schedule.runOnInit)
-                                job.stop();
-                        }).catch(e => this.logger.error(e));
-                    }
-                }, undefined, true, undefined, undefined, schedule.runOnInit);
-            }
         }
+    }
+    createNewJob(property, options) {
+        if (this._jobs[property])
+            return;
+        const job = new cron_1.CronJob(options.cron, (...args) => {
+            if (this._target[property]) {
+                utils_2.runFunctionalWithPromise(this._target[property](...args)).then(result => {
+                    if (result === true) {
+                        job.stop();
+                        delete this._jobs[property];
+                    }
+                }).catch(e => this.logger.error(e));
+            }
+        }, undefined, !!options.auto, undefined, this._target, !!options.run);
+        this._jobs[property] = job;
+        return job;
     }
 }
 exports.default = AgentFactory;

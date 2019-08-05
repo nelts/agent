@@ -1,8 +1,9 @@
 import 'reflect-metadata';
 import { Moment } from 'moment';
-export declare type ScheduleDecoratorType = {
-    cron: string | Date | Moment;
-    runOnInit?: boolean;
-};
-declare const _default: (cron: string | Date | Moment, runOnInit?: boolean) => MethodDecorator;
-export default _default;
+export declare type ScheduleDecoratorType = string | Date | Moment;
+declare function Schedule(cron: ScheduleDecoratorType): MethodDecorator;
+declare namespace Schedule {
+    var Auto: MethodDecorator;
+    var Run: MethodDecorator;
+}
+export default Schedule;

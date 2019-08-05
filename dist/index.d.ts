@@ -14,8 +14,10 @@ export default class AgentFactory extends Factory<AgentPlugin> implements Widget
     private _target;
     private _messager;
     private _ipc_pool;
+    private _jobs;
     constructor(processer: Processer, args: InCommingMessage);
     readonly messager: AgentMessager<this>;
+    private hybridJob;
     private convertHealth;
     componentWillCreate(): Promise<void>;
     componentDidCreated(): Promise<void>;
@@ -24,5 +26,6 @@ export default class AgentFactory extends Factory<AgentPlugin> implements Widget
     componentCatchError(err: Error): void;
     componentReceiveMessage(message: MessageReceiveDataOptions, socket?: any): void;
     private resolveWithAgentDecorators;
+    private createNewJob;
 }
 export { Ipc, Auto, Namespace, Schedule, AgentPlugin, AgentComponent, AgentComponentImplements, };
