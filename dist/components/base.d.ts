@@ -19,6 +19,6 @@ export declare class AgentComponentImplements extends AgentComponent {
     destroyed?(): Promise<void>;
     catchError?(err: Error): Promise<void>;
     ready?(socket?: any): Promise<void>;
-    health?<T = any>(socket: any): Promise<T>;
+    health?(socket?: any): Promise<any>;
     [name: string]: any;
 }
