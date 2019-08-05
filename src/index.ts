@@ -27,7 +27,10 @@ export default class AgentFactory extends Factory<AgentPlugin> implements Widget
   private _target: AgentComponentImplements;
   private _messager: AgentMessager<this>;
   private _ipc_pool: IPC_POOL = {};
-  private _jobs: { [job:string]: CronJob } = {};
+  private _jobs: { [job:string]: {
+    status: boolean,
+    job: CronJob,
+  } } = {};
   constructor(processer: Processer, args: InCommingMessage) {
     super(processer, args, AgentPlugin);
     const target = RequireDefault<AgentComponentConstructorType>(args.file);
@@ -45,12 +48,14 @@ export default class AgentFactory extends Factory<AgentPlugin> implements Widget
     });
     this.on('hybrid', async (message: MessageReceiveDataOptions, post: (data: any, reply: boolean) => any, socket?: any) => {
       const method = message.method;
-      if (method === 'event:put:job') {
-        this.hybridJob(message.data);
-        post(true, true);
-      } else if (this._ipc_pool[method] !== undefined && typeof this._target[method] === 'function') {
-        const value = await this._target[method](message.data, socket);
-        post(value, this._ipc_pool[method]);
+      switch (method) {
+        case 'event:put:job': post(this.startHybridJob(message.data), true); break;
+        case 'event:delete:job': post(this.stopHybridJob(message.data), true); break;
+        default:
+          if (this._ipc_pool[method] !== undefined && typeof this._target[method] === 'function') {
+            const value = await this._target[method](message.data, socket);
+            post(value, this._ipc_pool[method]);
+          }
       }
     })
   }
@@ -59,20 +64,20 @@ export default class AgentFactory extends Factory<AgentPlugin> implements Widget
     return this._messager;
   }
 
-  private hybridJob(data: { property: string, auto?: boolean, run?: boolean }) {
-    const target = this._agentComponentConstructor.prototype[data.property];
-    if (target) {
-      const schedule: ScheduleDecoratorType = Reflect.getMetadata(DecoratorNameSpace.SCHEDULE, target);
-      const schedule_auto: boolean = Reflect.getMetadata(DecoratorNameSpace.SCHEDULE_AUTO, target);
-      const schedule_run: boolean = Reflect.getMetadata(DecoratorNameSpace.SCHEDULE_RUN, target);
-      if (schedule) {
-        this.createNewJob(data.property, {
-          cron: schedule,
-          auto: data.auto || !!schedule_auto,
-          run: data.run || !!schedule_run,
-        });
-      }
-    }
+  private startHybridJob(property: string) {
+    const target = this._jobs[property];
+    if (!target) return false;
+    if (target.status) return true;
+    target.job.start();
+    return true;
+  }
+
+  private stopHybridJob(property: string) {
+    const target = this._jobs[property];
+    if (!target) return false;
+    if (!target.status) return true;
+    target.job.stop();
+    return true;
   }
 
   private async convertHealth(post: (data: any) => any, socket?: any) {
@@ -132,11 +137,14 @@ export default class AgentFactory extends Factory<AgentPlugin> implements Widget
       const property = targetProperties[i];
       const target = this._agentComponentConstructor.prototype[property];
       if (property === 'constructor') continue;
-      const schedule_auto: boolean = Reflect.getMetadata(DecoratorNameSpace.SCHEDULE_AUTO, target);
-      schedule_auto && this.hybridJob({ property: property });
-      const isIPC = Reflect.getMetadata(DecoratorNameSpace.IPC, target);
-      const isIPCFeedBack = Reflect.getMetadata(DecoratorNameSpace.FEEDBACK, target);
-      if (isIPC) this._ipc_pool[property] = !!isIPCFeedBack;
+      this.createNewJob(property, {
+        cron: Reflect.getMetadata(DecoratorNameSpace.SCHEDULE, target),
+        auto: !!Reflect.getMetadata(DecoratorNameSpace.SCHEDULE_AUTO, target),
+        run: !!Reflect.getMetadata(DecoratorNameSpace.SCHEDULE_RUN, target),
+      });
+      if (Reflect.getMetadata(DecoratorNameSpace.IPC, target)) {
+        this._ipc_pool[property] = !!Reflect.getMetadata(DecoratorNameSpace.FEEDBACK, target);
+      }
     }
   }
 
@@ -151,12 +159,16 @@ export default class AgentFactory extends Factory<AgentPlugin> implements Widget
         runFunctionalWithPromise(this._target[property](...args)).then(result => {
           if (result === true) {
             job.stop();
-            delete this._jobs[property];
+            this._jobs[property].status = false;
           }
         }).catch(e => this.logger.error(e));
       }
-    }, undefined, !!options.auto, undefined, this._target, !!options.run);
-    this._jobs[property] = job;
+    }, undefined, false, undefined, this._target, !!options.run);
+    options.auto && job.start();
+    this._jobs[property] = {
+      status: !!options.auto,
+      job
+    }
     return job;
   }
 }

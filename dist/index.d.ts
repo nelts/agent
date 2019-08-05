@@ -17,7 +17,8 @@ export default class AgentFactory extends Factory<AgentPlugin> implements Widget
     private _jobs;
     constructor(processer: Processer, args: InCommingMessage);
     readonly messager: AgentMessager<this>;
-    private hybridJob;
+    private startHybridJob;
+    private stopHybridJob;
     private convertHealth;
     componentWillCreate(): Promise<void>;
     componentDidCreated(): Promise<void>;

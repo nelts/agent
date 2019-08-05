@@ -41,33 +41,41 @@ class AgentFactory extends factory_1.Factory {
         });
         this.on('hybrid', async (message, post, socket) => {
             const method = message.method;
-            if (method === 'event:put:job') {
-                this.hybridJob(message.data);
-                post(true, true);
-            }
-            else if (this._ipc_pool[method] !== undefined && typeof this._target[method] === 'function') {
-                const value = await this._target[method](message.data, socket);
-                post(value, this._ipc_pool[method]);
+            switch (method) {
+                case 'event:put:job':
+                    post(this.startHybridJob(message.data), true);
+                    break;
+                case 'event:delete:job':
+                    post(this.stopHybridJob(message.data), true);
+                    break;
+                default:
+                    if (this._ipc_pool[method] !== undefined && typeof this._target[method] === 'function') {
+                        const value = await this._target[method](message.data, socket);
+                        post(value, this._ipc_pool[method]);
+                    }
             }
         });
     }
     get messager() {
         return this._messager;
     }
-    hybridJob(data) {
-        const target = this._agentComponentConstructor.prototype[data.property];
-        if (target) {
-            const schedule = Reflect.getMetadata(namespace_1.default.SCHEDULE, target);
-            const schedule_auto = Reflect.getMetadata(namespace_1.default.SCHEDULE_AUTO, target);
-            const schedule_run = Reflect.getMetadata(namespace_1.default.SCHEDULE_RUN, target);
-            if (schedule) {
-                this.createNewJob(data.property, {
-                    cron: schedule,
-                    auto: data.auto || !!schedule_auto,
-                    run: data.run || !!schedule_run,
-                });
-            }
-        }
+    startHybridJob(property) {
+        const target = this._jobs[property];
+        if (!target)
+            return false;
+        if (target.status)
+            return true;
+        target.job.start();
+        return true;
+    }
+    stopHybridJob(property) {
+        const target = this._jobs[property];
+        if (!target)
+            return false;
+        if (!target.status)
+            return true;
+        target.job.stop();
+        return true;
     }
     async convertHealth(post, socket) {
         const result = {
@@ -116,12 +124,14 @@ class AgentFactory extends factory_1.Factory {
             const target = this._agentComponentConstructor.prototype[property];
             if (property === 'constructor')
                 continue;
-            const schedule_auto = Reflect.getMetadata(namespace_1.default.SCHEDULE_AUTO, target);
-            schedule_auto && this.hybridJob({ property: property });
-            const isIPC = Reflect.getMetadata(namespace_1.default.IPC, target);
-            const isIPCFeedBack = Reflect.getMetadata(namespace_1.default.FEEDBACK, target);
-            if (isIPC)
-                this._ipc_pool[property] = !!isIPCFeedBack;
+            this.createNewJob(property, {
+                cron: Reflect.getMetadata(namespace_1.default.SCHEDULE, target),
+                auto: !!Reflect.getMetadata(namespace_1.default.SCHEDULE_AUTO, target),
+                run: !!Reflect.getMetadata(namespace_1.default.SCHEDULE_RUN, target),
+            });
+            if (Reflect.getMetadata(namespace_1.default.IPC, target)) {
+                this._ipc_pool[property] = !!Reflect.getMetadata(namespace_1.default.FEEDBACK, target);
+            }
         }
     }
     createNewJob(property, options) {
@@ -132,12 +142,16 @@ class AgentFactory extends factory_1.Factory {
                 utils_2.runFunctionalWithPromise(this._target[property](...args)).then(result => {
                     if (result === true) {
                         job.stop();
-                        delete this._jobs[property];
+                        this._jobs[property].status = false;
                     }
                 }).catch(e => this.logger.error(e));
             }
-        }, undefined, !!options.auto, undefined, this._target, !!options.run);
-        this._jobs[property] = job;
+        }, undefined, false, undefined, this._target, !!options.run);
+        options.auto && job.start();
+        this._jobs[property] = {
+            status: !!options.auto,
+            job
+        };
         return job;
     }
 }
