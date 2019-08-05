@@ -16,6 +16,7 @@ export default class AgentFactory extends Factory<AgentPlugin> implements Widget
     private _ipc_pool;
     constructor(processer: Processer, args: InCommingMessage);
     readonly messager: AgentMessager<this>;
+    private convertHealth;
     componentWillCreate(): Promise<void>;
     componentDidCreated(): Promise<void>;
     componentWillDestroy(): Promise<void>;

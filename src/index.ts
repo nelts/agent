@@ -35,12 +35,16 @@ export default class AgentFactory extends Factory<AgentPlugin> implements Widget
     this._target = new target(this);
     this._messager = new AgentMessager(this, this.inCommingMessage.mpid);
     if (!(this._target instanceof AgentComponent)) throw new Error('agent component must instanceof AgentComponent');
-    
-    this.on('ready', (socket?:any) => this._target.ready(socket));
-    this.on('health', async (post: (data: any) => any, socket?: any) => post(await this._target.health(socket)));
+
+    this.on('health', (post: (data: any) => any, socket?: any) => this.convertHealth(post, socket));
+    this.on('ready', (socket?:any) => {
+      if (typeof this._target.ready === 'function') {
+        return this._target.ready(socket);
+      }
+    });
     this.on('hybrid', async (message: MessageReceiveDataOptions, post: (data: any, reply: boolean) => any, socket?: any) => {
       const method = message.method;
-      if (this._ipc_pool[method] !== undefined && this._target[method]) {
+      if (this._ipc_pool[method] !== undefined && typeof this._target[method] === 'function') {
         const value = await this._target[method](message.data, socket);
         post(value, this._ipc_pool[method]);
       }
@@ -49,6 +53,25 @@ export default class AgentFactory extends Factory<AgentPlugin> implements Widget
 
   get messager() {
     return this._messager;
+  }
+
+  private async convertHealth(post: (data: any) => any, socket?: any) {
+    const result: {
+      status: boolean,
+      time: Date,
+      pid: number,
+      value?: any,
+    } = {
+      status: true,
+      time: new Date(),
+      pid: process.pid,
+    }
+    if (this._target.health) {
+      const value = await this._target.health(socket);
+      if (typeof value === 'object') return post(Object.assign(value, result));
+      result.value = value;
+    }
+    post(result);
   }
 
   async componentWillCreate() {

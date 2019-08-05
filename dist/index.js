@@ -32,11 +32,15 @@ class AgentFactory extends factory_1.Factory {
         this._messager = new messager_1.Agent(this, this.inCommingMessage.mpid);
         if (!(this._target instanceof base_1.default))
             throw new Error('agent component must instanceof AgentComponent');
-        this.on('ready', (socket) => this._target.ready(socket));
-        this.on('health', async (post, socket) => post(await this._target.health(socket)));
+        this.on('health', (post, socket) => this.convertHealth(post, socket));
+        this.on('ready', (socket) => {
+            if (typeof this._target.ready === 'function') {
+                return this._target.ready(socket);
+            }
+        });
         this.on('hybrid', async (message, post, socket) => {
             const method = message.method;
-            if (this._ipc_pool[method] !== undefined && this._target[method]) {
+            if (this._ipc_pool[method] !== undefined && typeof this._target[method] === 'function') {
                 const value = await this._target[method](message.data, socket);
                 post(value, this._ipc_pool[method]);
             }
@@ -44,6 +48,20 @@ class AgentFactory extends factory_1.Factory {
     }
     get messager() {
         return this._messager;
+    }
+    async convertHealth(post, socket) {
+        const result = {
+            status: true,
+            time: new Date(),
+            pid: process.pid,
+        };
+        if (this._target.health) {
+            const value = await this._target.health(socket);
+            if (typeof value === 'object')
+                return post(Object.assign(value, result));
+            result.value = value;
+        }
+        post(result);
     }
     async componentWillCreate() {
         await super.componentWillCreate();
