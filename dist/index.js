@@ -137,6 +137,8 @@ class AgentFactory extends factory_1.Factory {
     createNewJob(property, options) {
         if (this._jobs[property])
             return;
+        if (!options.cron)
+            return;
         const job = new cron_1.CronJob(options.cron, (...args) => {
             if (this._target[property]) {
                 utils_2.runFunctionalWithPromise(this._target[property](...args)).then(result => {

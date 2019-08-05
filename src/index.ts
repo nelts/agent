@@ -154,6 +154,7 @@ export default class AgentFactory extends Factory<AgentPlugin> implements Widget
     run?: boolean,
   }) {
     if (this._jobs[property]) return;
+    if (!options.cron) return;
     const job = new CronJob(options.cron, (...args: any[]) => {
       if (this._target[property]) {
         runFunctionalWithPromise(this._target[property](...args)).then(result => {
