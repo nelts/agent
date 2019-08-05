@@ -32,7 +32,7 @@ export default class AgentFactory extends Factory<AgentPlugin> implements Widget
     const target = RequireDefault<AgentComponentConstructorType>(args.file);
     this._name = args.name;
     this._agentComponentConstructor = target;
-    this._target = new AgentComponent(this);
+    this._target = new target(this);
     this._messager = new AgentMessager(this, this.inCommingMessage.mpid);
     if (!(this._target instanceof AgentComponent)) throw new Error('agent component must instanceof AgentComponent');
     

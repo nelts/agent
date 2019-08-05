@@ -28,7 +28,7 @@ class AgentFactory extends factory_1.Factory {
         const target = utils_1.RequireDefault(args.file);
         this._name = args.name;
         this._agentComponentConstructor = target;
-        this._target = new base_1.default(this);
+        this._target = new target(this);
         this._messager = new messager_1.Agent(this, this.inCommingMessage.mpid);
         if (!(this._target instanceof base_1.default))
             throw new Error('agent component must instanceof AgentComponent');
