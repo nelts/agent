@@ -116,7 +116,8 @@ class AgentFactory extends factory_1.Factory {
             const target = this._agentComponentConstructor.prototype[property];
             if (property === 'constructor')
                 continue;
-            this.hybridJob({ property: property });
+            const schedule_auto = Reflect.getMetadata(namespace_1.default.SCHEDULE_AUTO, target);
+            schedule_auto && this.hybridJob({ property: property });
             const isIPC = Reflect.getMetadata(namespace_1.default.IPC, target);
             const isIPCFeedBack = Reflect.getMetadata(namespace_1.default.FEEDBACK, target);
             if (isIPC)

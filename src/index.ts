@@ -132,7 +132,8 @@ export default class AgentFactory extends Factory<AgentPlugin> implements Widget
       const property = targetProperties[i];
       const target = this._agentComponentConstructor.prototype[property];
       if (property === 'constructor') continue;
-      this.hybridJob({ property: property });
+      const schedule_auto: boolean = Reflect.getMetadata(DecoratorNameSpace.SCHEDULE_AUTO, target);
+      schedule_auto && this.hybridJob({ property: property });
       const isIPC = Reflect.getMetadata(DecoratorNameSpace.IPC, target);
       const isIPCFeedBack = Reflect.getMetadata(DecoratorNameSpace.FEEDBACK, target);
       if (isIPC) this._ipc_pool[property] = !!isIPCFeedBack;
