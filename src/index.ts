@@ -111,17 +111,17 @@ export default class AgentFactory extends Factory<AgentPlugin> implements Widget
     await super.componentDidCreated();
     this.resolveWithAgentDecorators();
     this._target.created && await this._target.created();
-    await this.emit('AgentStarted');
+    await this.emit('ServerStarted');
   }
 
   async componentWillDestroy() {
     this._target.beforeDestroy && await this._target.beforeDestroy();
-    await this.emit('AgentStopping');
+    await this.emit('ServerStopping');
   }
 
   async componentDidDestroyed() {
     this._target.destroyed && await this._target.destroyed();
-    await this.emit('AgentStopped');
+    await this.emit('ServerStopped');
   }
 
   componentCatchError(err: Error) {
